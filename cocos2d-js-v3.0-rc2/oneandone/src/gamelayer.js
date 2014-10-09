@@ -17,6 +17,7 @@ var GameLayer = cc.Layer.extend({
     now_posx:-1,
     now_posy:-1,
     event_listener:null,
+    touch_down:false,
 
     ctor:function()
     {
@@ -142,6 +143,7 @@ var GameLayer = cc.Layer.extend({
         var move_ac = cc.moveTo(0.2,cc.p(g_screen_size.width/2,g_screen_size.height/2+200));
         this.txt_sum.runAction(move_ac);
         //
+        this.touch_down = false;
         this.now_posx = -1;
         this.now_posy = -1;
         this.lst_btn = [];
@@ -180,6 +182,7 @@ var GameLayer = cc.Layer.extend({
         for (var i=0; i < touches.length;i++ ) {
             var touch = touches[i];
             if(!target.isNumBtn(touch)) continue;
+            target.touch_down = true;
             var pos = touch.getLocation();
             var id = touch.getID();
 //            cc.log("Touch #" + i + ". onTouchesBegan at: " + pos.x + " " + pos.y + " Id:" + id);
@@ -204,12 +207,8 @@ var GameLayer = cc.Layer.extend({
     onTouchesEnded:function(touches, event) {
         var target = event.getCurrentTarget();
         var touch = touches[0];
-        if(!target.isNumBtn(touch)) return;
-        var pos = touch.getLocation();
-        var id = touch.getID();
-//            cc.log("Touch #" + i + ". onTouchesEnded at: " + pos.x + " " + pos.y + " Id:" + id);
-        var btn_pos = target.getNumSize(pos.x,pos.y);
-//            cc.log("btn pos x " + btn_pos.width + " " + btn_pos.height);
+        if(!target.touch_down) return;
+
         if(target.calculate())
         {
             cc.log("ok you win");
@@ -221,17 +220,7 @@ var GameLayer = cc.Layer.extend({
         }
     },
     onTouchesCancelled:function(touches, event) {
-        var target = event.getCurrentTarget();
-        for (var i=0; i < touches.length;i++ ) {
-            var touch = touches[i];
-            if(!target.isNumBtn(touch)) continue;
-            var pos = touch.getLocation();
-            var id = touch.getID();
-//            cc.log("Touch #" + i + ". onTouchesCancelled at: " + pos.x + " " + pos.y + " Id:" + id);
-            var btn_pos = target.getNumSize(pos.x,pos.y);
-//            cc.log("btn pos x " + btn_pos.width + " " + btn_pos.height);
-            target.updateNum(pos.x,pos.y);
-        }
+        //
     }
 
 });

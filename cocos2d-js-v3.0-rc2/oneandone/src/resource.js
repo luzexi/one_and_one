@@ -1,7 +1,7 @@
 var res = {
 
     s_game_bg:"res/开始界面/began_0013_bg.png",
-    s_game_tittle:"res/开始界面/began_0012_1+1.png",
+    s_game_tittle:"res/开始界面/began_0012_11.png",
     s_game_playbtn1:"res/开始界面/began_0003_play.png",
     s_game_playbtn2:"res/开始界面/began_0002_play-2.png",
 
