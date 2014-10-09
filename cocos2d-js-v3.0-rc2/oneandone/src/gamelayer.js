@@ -8,6 +8,16 @@ var g_screen_size = null;
 
 var GameLayer = cc.Layer.extend({
 
+    lst_btn:null,
+    lst_num:null,
+    lst_down:null,
+
+    sum_num:0,
+    txt_sum:null,
+    now_posx:-1,
+    now_posy:-1,
+    event_listener:null,
+
     ctor:function()
     {
         this._super();
@@ -35,22 +45,192 @@ var GameLayer = cc.Layer.extend({
         btn_menu_play.setPosition(g_screen_size.width/2,100);
         this.addChild(btn_menu_play);
 
-        var txt_sum = new cc.LabelTTF("12","",50);
-        txt_sum.setColor(cc.color(0,0,0,255));
-        txt_sum.setPosition(g_screen_size.width/2,g_screen_size.height/2+200);
-        this.addChild(txt_sum);
+        this.txt_sum = new cc.LabelTTF("12","",50);
+        this.txt_sum.setColor(cc.color(0,0,0,255));
+        this.txt_sum.setPosition(g_screen_size.width/2,g_screen_size.height/2+200);
+        this.addChild(this.txt_sum);
 
+        this.randomBtn();
+
+        cc.eventManager.addListener(
+            {
+                event : cc.EventListener.TOUCH_ALL_AT_ONCE,
+                onTouchesBegan: this.onTouchesBegan,
+                onTouchesMoved: this.onTouchesMoved,
+                onTouchesEnded: this.onTouchesEnded,
+                onTouchesCancelled: this.onTouchesCancelled
+            },this
+        );
+    },
+
+    isNumBtn:function( obj )
+    {
+        var pos = obj.getLocation();
+        if(pos.x > 135 && pos.x < (135 + 5*70))
+        {
+            if(pos.y < 625 && pos.y > (625 - 5*70))
+                return true;
+        }
+        return false;
+    },
+
+    getNumSize:function( x , y)
+    {
+        var size = cc.size(0,0);
+        size.width = parseInt( (x-135)/70 );
+        size.height = parseInt( (y-(625-5*70))/70 );
+
+        return size;
+    },
+
+    updateNum:function(x,y)
+    {
+        var pos = this.getNumSize(x,y);
+        if(this.now_posx != -1 && this.now_posy != -1)
+        {
+            if( Math.abs( pos.width - this.now_posx ) + Math.abs( pos.height - this.now_posy ) != 1 )
+            {
+                return;
+            }
+        }
+        if(!this.lst_down[pos.width*5+pos.height])
+        {
+            this.lst_down[pos.width*5+pos.height] = true;
+            this.now_posx = pos.width;
+            this.now_posy = pos.height;
+            this.lst_btn[pos.width*5+pos.height].removeFromParent(true);
+            switch(this.lst_num[pos.width*5+pos.height])
+            {
+                case 1:
+                    this.lst_btn[pos.width*5+pos.height] = new cc.Sprite(res.s_game_down1);
+                    break;
+                case 2:
+                    this.lst_btn[pos.width*5+pos.height] = new cc.Sprite(res.s_game_down2);
+                    break;
+                case 3:
+                    this.lst_btn[pos.width*5+pos.height] = new cc.Sprite(res.s_game_down3);
+                    break;
+            }
+            this.addChild(this.lst_btn[pos.width*5+pos.height]);
+            this.lst_btn[pos.width*5+pos.height].setPosition(
+                    g_screen_size.width/2 - 150 + pos.width*70,
+                    g_screen_size.height/2 - 170 + pos.height*70
+            );
+        }
+    },
+
+    calculate:function()
+    {
+        var sum = 0;
+        for(var i = 0 ; i < this.lst_num.length ; i++ )
+        {
+            if(this.lst_down[i])
+            {
+                sum += this.lst_num[i];
+            }
+        }
+        if(sum == this.sum_num)
+            return true;
+        return false;
+    },
+
+    randomBtn:function()
+    {
+        this.sum_num = Math.ceil( Math.random()*15 + 2 );
+        this.txt_sum.setString(""+this.sum_num);
+        this.txt_sum.setPosition(g_screen_size.width,g_screen_size.height/2+200)
+        var move_ac = cc.moveTo(0.2,cc.p(g_screen_size.width/2,g_screen_size.height/2+200));
+        this.txt_sum.runAction(move_ac);
+        //
+        this.now_posx = -1;
+        this.now_posy = -1;
+        this.lst_btn = [];
+        this.lst_num = [];
+        this.lst_down = [];
         for(var i = 0 ; i<5 ;i++)
         {
             for(var j = 0 ; j<5 ; j++)
             {
-                var btn_num = new cc.MenuItemImage(res.s_game_num1,res.s_game_down1,null,this);
-                btn_num.setAnchorPoint(0,0);
-                var btn_menu_num = new cc.Menu(btn_num);
-                btn_menu_num.setPosition( g_screen_size.width/2 - 170 + i*70, g_screen_size.height/2 -220 + j*70);
-                btn_menu_num.setAnchorPoint(0.5,0.5);
-                this.addChild(btn_menu_num);
+                var random_num = Math.ceil( Math.random()*3 );
+
+                var btn_num = null;
+                switch(random_num)
+                {
+                    case 1:
+                        btn_num = new cc.Sprite(res.s_game_num1);
+                        break;
+                    case 2:
+                        btn_num = new cc.Sprite(res.s_game_num2);
+                        break;
+                    case 3:
+                        btn_num = new cc.Sprite(res.s_game_num3);
+                        break;
+                }
+                btn_num.setPosition( g_screen_size.width/2 - 150 + i*70, g_screen_size.height/2 -170 + j*70);
+                this.addChild(btn_num);
+                this.lst_btn.push(btn_num);
+                this.lst_num.push(random_num);
+                this.lst_down.push(false);
             }
+        }
+    },
+
+    onTouchesBegan:function(touches, event) {
+        var target = event.getCurrentTarget();
+        for (var i=0; i < touches.length;i++ ) {
+            var touch = touches[i];
+            if(!target.isNumBtn(touch)) continue;
+            var pos = touch.getLocation();
+            var id = touch.getID();
+//            cc.log("Touch #" + i + ". onTouchesBegan at: " + pos.x + " " + pos.y + " Id:" + id);
+            var btn_pos = target.getNumSize(pos.x,pos.y);
+//            cc.log("btn pos x " + btn_pos.width + " " + btn_pos.height);
+            target.updateNum(pos.x,pos.y);
+        }
+    },
+    onTouchesMoved:function(touches, event) {
+        var target = event.getCurrentTarget();
+        for (var i=0; i < touches.length;i++ ) {
+            var touch = touches[i];
+            if(!target.isNumBtn(touch)) continue;
+            var pos = touch.getLocation();
+            var id = touch.getID();
+//            cc.log("Touch #" + i + ". onTouchesMoved at: " + pos.x + " " + pos.y + " Id:" + id);
+            var btn_pos = target.getNumSize(pos.x,pos.y);
+//            cc.log("btn pos x " + btn_pos.width + " " + btn_pos.height);
+            target.updateNum(pos.x,pos.y);
+        }
+    },
+    onTouchesEnded:function(touches, event) {
+        var target = event.getCurrentTarget();
+        var touch = touches[0];
+        if(!target.isNumBtn(touch)) return;
+        var pos = touch.getLocation();
+        var id = touch.getID();
+//            cc.log("Touch #" + i + ". onTouchesEnded at: " + pos.x + " " + pos.y + " Id:" + id);
+        var btn_pos = target.getNumSize(pos.x,pos.y);
+//            cc.log("btn pos x " + btn_pos.width + " " + btn_pos.height);
+        if(target.calculate())
+        {
+            cc.log("ok you win");
+            target.randomBtn();
+        }
+        else
+        {
+            cc.director.runScene(new OverScene());
+        }
+    },
+    onTouchesCancelled:function(touches, event) {
+        var target = event.getCurrentTarget();
+        for (var i=0; i < touches.length;i++ ) {
+            var touch = touches[i];
+            if(!target.isNumBtn(touch)) continue;
+            var pos = touch.getLocation();
+            var id = touch.getID();
+//            cc.log("Touch #" + i + ". onTouchesCancelled at: " + pos.x + " " + pos.y + " Id:" + id);
+            var btn_pos = target.getNumSize(pos.x,pos.y);
+//            cc.log("btn pos x " + btn_pos.width + " " + btn_pos.height);
+            target.updateNum(pos.x,pos.y);
         }
     }
 

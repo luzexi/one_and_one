@@ -10,7 +10,12 @@ var res = {
     s_game_num3:"res/开始界面/began_0008_3.png",
     s_game_down1:"res/开始界面/began_0005_1down.png",
     s_game_down2:"res/开始界面/began_0006_2down.png",
-    s_game_down3:"res/开始界面/began_0007_3down.png"
+    s_game_down3:"res/开始界面/began_0007_3down.png",
+
+    s_over_finish:"res/结束界面/FINISH_0001_finish.png",
+    s_over_back:"res/结论界面/give_0002_back.png",
+    s_over_share1:"res/结论界面/give_0001_share1.png",
+    s_over_share2:"res/结论界面/give_0000_share2.png"
 };
 
 var g_resources = [];
